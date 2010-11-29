@@ -1,10 +1,10 @@
-Al Jazeera English	https://www.google.com/reader/shared/user%2F16528950307354065263%2Flabel%2FAl%20Jazeera%20English
-Associated Press	https://www.google.com/reader/shared/user%2F16528950307354065263%2Flabel%2FAssociated%20Press
-BBC News	https://www.google.com/reader/shared/user%2F16528950307354065263%2Flabel%2FBBC%20News
-CNN	https://www.google.com/reader/shared/user%2F16528950307354065263%2Flabel%2FCNN.com
-Drudge Report	https://www.google.com/reader/shared/user%2F16528950307354065263%2Flabel%2FDrudge%20Report
-FOX News	https://www.google.com/reader/shared/user%2F16528950307354065263%2Flabel%2FFOXNews.com
-Huffington Post	https://www.google.com/reader/shared/user%2F16528950307354065263%2Flabel%2FHuffington%20Post
-NPR	https://www.google.com/reader/shared/user%2F16528950307354065263%2Flabel%2FNPR
-New York Times	https://www.google.com/reader/shared/user%2F16528950307354065263%2Flabel%2FNYTimes.com
-Reuters	https://www.google.com/reader/shared/user%2F16528950307354065263%2Flabel%2FReuters
+Al Jazeera English	english.aljazeera.net	http://www.google.com/reader/public/atom/user/16528950307354065263/label/Al%20Jazeera%20English
+Associated Press	ap.org	http://www.google.com/reader/public/atom/user/16528950307354065263/label/Associated%20Press
+BBC News	news.bbc.co.uk	http://www.google.com/reader/public/atom/user/16528950307354065263/label/BBC%20News
+CNN	cnn.com	http://www.google.com/reader/public/atom/user/16528950307354065263/label/CNN.com
+Drudge Report	drudgereport.com	http://www.google.com/reader/public/atom/user/16528950307354065263/label/Drudge%20Report
+FOX News	foxnews.com	http://www.google.com/reader/public/atom/user/16528950307354065263/label/FOXNews.com
+Huffington Post	huffingtonpost.com	http://www.google.com/reader/public/atom/user/16528950307354065263/label/Huffington%20Post
+NPR	npr.org	http://www.google.com/reader/public/atom/user/16528950307354065263/label/NPR
+New York Times	nytimes.com	http://www.google.com/reader/public/atom/user/16528950307354065263/label/NYTimes.com
+Reuters	reuters.com	http://www.google.com/reader/public/atom/user/16528950307354065263/label/Reuters
