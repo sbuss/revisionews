@@ -6,10 +6,8 @@ import operator
 import re
 import urlparse
 
-from boto.sqs.connection import SQSConnection
-from boto.sqs.message import Message
-
 from tracker import __version__
+from tracker import sqs_utils
 from tracker import feed_utils
 
 # File to store the timestamp of the last feed read
@@ -34,7 +32,7 @@ def fetch_feed(label, url):
     """
     dateformat = "%Y-%m-%dT%H:%M:%SZ"
     new_items = 0
-    queue = get_queue(label)
+    queue = sqs_utils.get_queue(label)
 
     # Get the feed
     feed = feedparser.parse(feed_utils.format_feed_url(url))
@@ -63,40 +61,14 @@ def fetch_feed(label, url):
     f = open(LAST_ACCESS % label, 'w')
     f.write(sorted_entries[0].updated)
     f.close()
-
-def get_queue(label):
-    conn = SQSConnection()
-    qname = ("revisionews_%s" % re.sub(r"\W","",label))[:80]
-    log.debug("queue name is %s" % qname)
-    return conn.create_queue(qname)
     
 def add_to_queue(queue, url):
     """Add the url to the process queue."""
-    m = Message()
-    m.set_body(url)
+    m = sqs_utils.build_message(url)
     try:
-        status = queue.write(m)
-        if not isinstance(status, Message):
-            raise Exception("Status was not a Message. URL = %s, Q = %s" 
-                            % (url, queue.name))
+        sqs_utils.add_to_queue(queue, m)
     except Exception as e:
         log.error("Could not add url %s to queue %s: %s" % (url, queue.name, e))
-
-def fetch_message(queue_name):
-    conn = SQSConnection()
-    q = conn.create_queue(queue_name)
-    message = q.get_messages(1)[0]
-    return message
-
-def delete_message(queue_name, message):
-    conn = SQSConnection()
-    q = conn.create_queue(queue_name)
-    return q.delete_message(message)
-
-def delete_queue(queue_name):
-    conn = SQSConnection()
-    q = conn.create_queue(queue_name)
-    return q.delete()
 
 if __name__ == "__main__":
     log.level = logging.INFO
