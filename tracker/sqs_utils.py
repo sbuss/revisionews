@@ -2,6 +2,7 @@ import re
 
 from boto.sqs.connection import SQSConnection
 from boto.sqs.message import Message
+from boto.sqs.queue import Queue
 from boto.sqs import regions
 
 # Queues
@@ -10,9 +11,8 @@ def get_queue(label):
     qname = ("revisionews_%s" % re.sub(r"\W","",label))[:80]
     return conn.create_queue(qname)
 
-def delete_queue(queue_name):
-    q = get_queue(queue_name)
-    return q.delete()
+def delete_queue(queue):
+    return queue.delete()
 
 # Messages
 def build_message(body):
@@ -29,15 +29,9 @@ def add_to_queue(queue, message):
         raise Exception("Failed to write message. Q = %s, M = %s"
                         % (queue.name, message))
     
-def fetch_message(queue_name):
-    try:
-        q = get_queue(queue_name)
-        message = q.get_messages(1)[0]
-        return message
-    except:
-        return None
+def fetch_message(queue):
+    return queue.read(60)
 
-def delete_message(queue_name, message):
-    q = get_queue(queue_name)
-    return q.delete_message(message)
+def delete_message(queue, message):
+    return queue.delete_message(message)
 

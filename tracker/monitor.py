@@ -1,12 +1,10 @@
 from datetime import datetime
-import feedparser
 import logging
 import logging.config
 import operator
-import re
-import urlparse
 
-from tracker import __version__
+import feedparser
+
 from tracker import sqs_utils
 from tracker import feed_utils
 
@@ -51,6 +49,8 @@ def fetch_feed(label, url):
     for entry in sorted_entries:
         if datetime.strptime(entry.updated, dateformat) > last_access:
             add_to_queue(queue, entry.link)
+            # NOTE: entry.link is the URL given to the feed, not the item's
+            # actual URL
             new_items += 1
             log.debug("Adding %s" % entry.link)
         else:
