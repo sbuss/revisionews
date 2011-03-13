@@ -95,11 +95,11 @@ def start(queue_name, max_wait, min_wait):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process a queue")
-    parser.add_argument("queue", help="Name of the queue to process")
+    parser.add_argument("queue", help="Name of the queue to process. This should correspond to a named feed from the feeds.txt file. ")
     parser.add_argument("-max", action="store", dest="max_wait", 
                         default=5000, type=int, help="The maximum number of milliseconds to wait between polls to SQS, defaults to 5000 (5 sec)")
     parser.add_argument("-min", action="store", dest="min_wait", 
-                        default=500, type=int, help="The minimum number of seconds to wait between polls to SQS, defaults to 500 (0.5 sec)")
+                        default=500, type=int, help="The minimum number of milliseconds to wait between polls to SQS, defaults to 500 (0.5 sec)")
     args = parser.parse_args()
     # Lower the logging verbosity, since this is probably run as a daemon
     log.level = logging.INFO
