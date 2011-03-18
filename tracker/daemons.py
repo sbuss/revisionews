@@ -7,7 +7,7 @@ import time
 class SQSDaemon(object):
     parser = argparse.ArgumentParser(add_help=False, # argparse issue
                                      description="Monitor an SQS queue.")
-    parser.add_argument("queue", help="Name of the queue to process. This should correspond to a named feed from the feeds.txt file. ")
+    parser.add_argument("-queue", help="Name of the queue to process. This should correspond to a named feed from the feeds.txt file. ")
     parser.add_argument("-max", action="store", dest="max_wait", 
                         default=5000, type=int, help="The maximum number of milliseconds to wait between polls to SQS, defaults to 5000 (5 sec)")
     parser.add_argument("-min", action="store", dest="min_wait", 
