@@ -1,11 +1,21 @@
 """Handle reading and writing to the article processing pipeline"""
+import argparse
+import logging
+import logging.config
 import json
-import sqs_utils
 
-class Pipeline(object):
+from tracker import sqs_utils
+from tracker.daemons import SQSDaemon
+
+# Configure logger
+logging.config.fileConfig("logging.conf")
+log = logging.getLogger("process")
+log.level = logging.DEBUG
+
+class Pipeline(SQSDaemon):
     QUEUE_NAME = "revisionews.pipeline"
-    def __init__(self):
-        self.queue = sqs_utils.get_queue(QUEUE_NAME)
+    def __init__(self, *args, **kwargs):
+        super(Pipeline, self).__init__(queue_name=QUEUE_NAME, *args, **kwargs)
 
     def read(self):
         """Read from the pipeline
@@ -91,7 +101,6 @@ class Message(object):
     def del_fetch_date(self):
         self._del('fetch_date')
 
-
     url = property(get_url, set_url, del_url, 
                     "URL of the article being processed")
     body = property(get_body, set_body, del_body,
@@ -110,3 +119,23 @@ class Message(object):
         of this object"""
         return "%s" % self.__unicode__()
         
+def start(max_wait, min_wait):
+    log.info("Starting article processing pipeline daemon")
+    add = ArticleDownloaderDaemon(max_wait = max_wait, 
+                                  min_wait = min_wait, 
+                                  log = log)
+    add.run()
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Process a the pipeline queue.",
+                                     parents=[SQSDaemon.parser],
+                                     conflict_handler="resolve")
+    # Remove queue argument
+    parser.add_argument("-queue", help="ignored")
+    args = parser.parse_args()
+    # Lower the logging verbosity, since this is probably run as a daemon
+    log.level = logging.INFO
+    if args.log_level == "DEBUG":
+        log.level = logging.DEBUG
+    start(args.max_wait, args.min_wait)
+
