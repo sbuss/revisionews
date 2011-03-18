@@ -5,7 +5,6 @@ import logging.config
 import httplib2
 
 from tracker import sqs_utils
-from tracker import store
 from tracker.daemons import SQSDaemon
 
 # Configure logger
