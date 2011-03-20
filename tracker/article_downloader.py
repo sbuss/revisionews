@@ -6,10 +6,11 @@ import httplib2
 
 from tracker import sqs_utils
 from tracker.daemons import SQSDaemon
+from tracker.pipeline import Pipeline, Message
 
 # Configure logger
 logging.config.fileConfig("logging.conf")
-log = logging.getLogger("process")
+log = logging.getLogger("articleDownloader")
 log.level = logging.DEBUG
 
 class ArticleDownloaderDaemon(SQSDaemon):
