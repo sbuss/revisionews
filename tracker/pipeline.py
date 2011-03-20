@@ -3,6 +3,7 @@ import argparse
 import logging
 import logging.config
 import json
+import zlib
 
 from tracker import sqs_utils
 from tracker.daemons import SQSDaemon
@@ -20,17 +21,17 @@ class Pipeline(SQSDaemon):
     def read(self):
         """Read from the pipeline
         
-        :rtype: :class:`Message`
-        :return: The :class:`Message` fetched, or None if the queue is empty.
+        :rtype: :class:`~tracker.pipeline.Message`
+        :return: The :class:`~tracker.pipeline.Message` fetched, or None if the queue is empty.
         """
         m = sqs_utils.fetch_message(self.queue)
         return m
 
     def write(self, message):
-        """Write a :class:`Message` to the queue
+        """Write a :class:`~tracker.pipeline.Message` to the pipeline
 
-        :type message: :class:`Message`
-        :param message: The :class:`Message` to write to the queue.
+        :type message: :class:`~tracker.pipeline.Message`
+        :param message: The :class:`~tracker.pipeline.Message` to write to the queue.
         """
         m = sqs_utils.build_message(message.prepare())
         try:
@@ -54,7 +55,7 @@ class Message(object):
     def __init__(self, url=None, body=None, fetch_date=None):
         self._wire = {"url":"", "body":""}
         self.set_url(url)
-        self.set_body(body)
+        self.set_body(zlib.compress(body))
         self.set_fetch_date(fetch_date)
 
     @classmethod
@@ -84,10 +85,10 @@ class Message(object):
         self._del['url'] = ""
 
     def get_body(self):
-        return self._get('body')
+        return zlib.decompress(self._get('body'))
 
     def set_body(self, body):
-        self._set('body', body)
+        self._set('body', zlib.compress(body))
 
     def del_body(self):
         self._del('body')
