@@ -46,6 +46,7 @@ class FeedReader(object):
         self.queue = sqs_utils.get_queue(feed.domain)
         self.dateformat = "%Y-%m-%dT%H:%M:%SZ"
         self.log = log
+        self.log.debug("Queue is %s" % self.queue.name)
 
     def run(self):
         new_items = 0
@@ -78,17 +79,15 @@ class FeedReader(object):
     def add_to_queue(self, entry):
         last_access = self.get_last_access()
         if datetime.strptime(entry.updated, self.dateformat) > last_access:
-            """
             m = sqs_utils.build_message(entry.link)
+            self.log.debug("Adding %s" % entry.link)
             try:
                 sqs_utils.add_to_queue(self.queue, m)
             except Exception as e:
                 log.error("Could not add url %s to queue %s: %s" % \
-                        (self.link, self.queue.name, e))
-                """
+                        (entry.link, self.queue.name, e))
             # NOTE: entry.link is the URL given to the feed, not the item's
             # actual URL
-            self.log.debug("Adding %s" % entry.link)
             return True
         else:
             return False
@@ -137,7 +136,6 @@ if __name__ == "__main__":
         log.info("Starting feed reader daemon with feeds %s" % \
             ",".join([feed for feed in feeds.iterkeys()]))
         frd.start()
-        log.info("Started")
         sys.exit(0)
     elif args.command == "stop":
         log.info("Stopping feed reader daemon with feeds %s" % \
