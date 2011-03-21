@@ -7,6 +7,8 @@ import datetime
 import time
 from signal import SIGTERM 
 
+from tracker import sqs_utils
+
 class Daemon(object):
     """A generic daemon class.
 
@@ -173,7 +175,6 @@ class PeriodicDaemon(Daemon):
         """Wait the appropriate amount of time between SQS polls."""
         d = datetime.datetime.now() - self.last_access
         dt = (d.microseconds / 1000) + (d.seconds * 1000)
-        self.log.debug("dt is %s" % dt)
         if dt < 0:
             # uh, just in case
             dt = dt * -1;
@@ -229,26 +230,29 @@ class SQSDaemon(PeriodicDaemon):
     parser.add_argument("-queue", help="Name of the queue to process. This should correspond to a named feed from the feeds.txt file. ")
     """Daemon that periodically checks an SQS queue.
     """
-    def __init__(self, queue_name, pidfile="/tmp/sqs_daemon_%s.pid", 
+    def __init__(self, queue_name, pidfile="/tmp/sqs_daemon.pid", 
                  *args, **kwargs):
         """Initializes the Processor daemon.
         .. function: __init__(queue_name, *args, **kwargs)
 
         :param queue_name: The name of the queue, corresponding to an entry in feeds.txt
         """
-        super(SQSDaemon, self).__init__(pidfile=(pidfile % queuename), 
+        super(SQSDaemon, self).__init__(pidfile=pidfile, 
                                         *args, **kwargs)
         self.q = sqs_utils.get_queue(queue_name)
-        self.log.debug("Queue is %s" % self.q)
+        self.log.debug("Queue is %s" % self.q.name)
 
     def run(self):
         """Run the processor daemon."""
         while True:
             m = sqs_utils.fetch_message(self.q)
+            self.log.debug("Fetched message for %s" % self.q.name)
+            self.log.debug("Message is %s" % m)
             self.reset_timer()
             if m is None:
                 self.increase_wait()
             else:
+                self.log.info("Found a message for %s: %s" % (self.q.name, m.get_body()))
                 self.decrease_wait()
                 if(self.process(m)):
                     # Success, so delete the message
