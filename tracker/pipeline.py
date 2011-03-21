@@ -3,6 +3,7 @@ import argparse
 import logging
 import logging.config
 import json
+import sys
 import zlib
 
 from tracker import sqs_utils
@@ -13,11 +14,15 @@ logging.config.fileConfig("logging.conf")
 log = logging.getLogger("process")
 log.level = logging.DEBUG
 
-class Pipeline(SQSDaemon):
-    QUEUE_NAME = "revisionews.pipeline"
+class PipelineDaemon(SQSDaemon):
     def __init__(self, *args, **kwargs):
-        super(Pipeline, self).__init__(queue_name=QUEUE_NAME, *args, **kwargs)
+        super(Pipeline, self).__init__(queue_name="revisionews_pipeline", 
+            pidfile="/tmp/pipeline.pid", *args, **kwargs)
 
+class Pipeline(object):
+    def __init__(self, queue_name="revisionews_pipeline"):
+        self.queue = sqs_utils.get_queue(queue_name)
+        
     def read(self):
         """Read from the pipeline
         
@@ -120,13 +125,6 @@ class Message(object):
         of this object"""
         return "%s" % self.__unicode__()
         
-def start(max_wait, min_wait):
-    log.info("Starting article processing pipeline daemon")
-    add = ArticleDownloaderDaemon(max_wait = max_wait, 
-                                  min_wait = min_wait, 
-                                  log = log)
-    add.run()
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process a the pipeline queue.",
                                      parents=[SQSDaemon.parser],
@@ -138,5 +136,24 @@ if __name__ == "__main__":
     log.level = logging.INFO
     if args.log_level == "DEBUG":
         log.level = logging.DEBUG
-    start(args.max_wait, args.min_wait)
+    pd = PipelineDaemon(max_wait = args.max_wait, 
+                         min_wait = args.min_wait, 
+                         log = log)
+    if args.command == "start":
+        log.info("Starting pipeline daemon")
+        pd.start()
+        sys.exit(0)
+    elif args.command == "stop":
+        log.info("Stopping pipeline daemon")
+        pd.stop()
+        sys.exit(0)
+    elif args.command == "restart":
+        log.info("Restarting pipeline daemon")
+        pd.restart()
+        sys.exit(0)
+    else:
+        print("Invalid command. Expected 'start', 'stop', or 'restart'.")
+        parser.print_usage()
+        sys.exit(2)
+
 
