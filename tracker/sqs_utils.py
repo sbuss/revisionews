@@ -66,7 +66,7 @@ def add_to_queue(queue, message):
         raise Exception("Failed to write message. Q = %s, M = %s"
                         % (queue.name, message))
     # else we can assume it succeeded?
-    return true
+    return True
     
 def fetch_message(queue):
     """Fetch a :class:`~boto.sqs.message.Message` from the :class:`~boto.sqs.queue.Queue`.
