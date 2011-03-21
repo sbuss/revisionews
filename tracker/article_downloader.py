@@ -1,3 +1,4 @@
+import sys
 import argparse
 import logging
 import logging.config
@@ -20,9 +21,12 @@ class ArticleDownloaderDaemon(SQSDaemon):
     =====
     $> python process.py --max 5000 --min 500 "BBC News"
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, queue_name, *args, **kwargs):
         self.h = httplib2.Http()
-        super(Processor, self).__init__(*args, **kwargs)
+        super(ArticleDownloaderDaemon, self).__init__(
+            queue_name=queue_name,
+            pidfile="/tmp/article_downloader_%s" % queue_name,
+            *args, **kwargs)
 
     def process(self, message):
         """Process a :class:`~boto.sqs.message.Message` received from SQS.
@@ -34,9 +38,12 @@ class ArticleDownloaderDaemon(SQSDaemon):
         compare the stored version to the fetched version. If stored != fetched 
         then store a new copy and send an alert.
         """
+        self.log.debug("Processing for %s" % self.q.name)
         if message is None:
             return
         url = message.get_body()
+        response = None
+        content = None
         try:
             headers = {}
             # Set a fake referer and user agent to bypass the NYT paywall
@@ -49,27 +56,24 @@ class ArticleDownloaderDaemon(SQSDaemon):
 
             # because the link in SQS was the feed url, fetch the page so we
             # can follow redirects
-            self.log.debug("url is %s" % url)
+            self.log.info("Fetching url: %s" % url)
             (response, content) = self.h.request(url, headers=headers)
             self.log.debug("Response from server was %s" % response)
-
-            # Write the contents of the page, zipped, to the processing pipeline
-            pipeline = Pipeline()
-            pipeline.write(Message(response['content-location'], 
-                                   content, 
-                                   response['date']))
-            print(url)
-            return true
         except Exception as e:
             self.log.error("Could not fetch %s: %s" % (url, e))
 
-def start(queue_name, max_wait, min_wait):
-    log.info("Starting article downloader daemon with queue %s" % queue_name)
-    add = ArticleDownloaderDaemon(queue_name = queue_name, 
-                                  max_wait = max_wait, 
-                                  min_wait = min_wait, 
-                                  log = log)
-    add.run()
+        if response is not None and content is not None:
+            try:
+                # Write the contents of the page, zipped, to the processing pipeline
+                pipeline = Pipeline()
+                pipeline.write(Message(response['content-location'], 
+                                       content, 
+                                       response['date']))
+                return true
+            except Exception as e:
+                self.log.error("Couldn't add the article at %s to the pipeline: %s" % (url, e))
+        else:
+            return false
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process a queue",
@@ -79,5 +83,27 @@ if __name__ == "__main__":
     log.level = logging.INFO
     if args.log_level == "DEBUG":
         log.level = logging.DEBUG
-    start(args.queue, args.max_wait, args.min_wait)
+    add = ArticleDownloaderDaemon(queue_name = args.queue, 
+                                  max_wait = args.max_wait, 
+                                  min_wait = args.min_wait, 
+                                  log = log)
+    if args.command == "start":
+        log.info("Starting article downloader daemon for %s" % \
+            args.queue)
+        add.start()
+        sys.exit(0)
+    elif args.command == "stop":
+        log.info("Stopping article downloader daemon for %s" % \
+            args.queue)
+        add.stop()
+        sys.exit(0)
+    elif args.command == "restart":
+        log.info("Restarting article downloader daemon for %s" % \
+            args.queue)
+        add.restart()
+        sys.exit(0)
+    else:
+        print("Invalid command. Expected 'start', 'stop', or 'restart'.")
+        parser.print_usage()
+        sys.exit(2)
 
