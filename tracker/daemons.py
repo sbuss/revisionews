@@ -256,7 +256,7 @@ class SQSDaemon(PeriodicDaemon):
                 self.decrease_wait()
                 if(self.process(m)):
                     # Success, so delete the message
-                    sqs_utils.delete_message(m)
+                    sqs_utils.delete_message(self.q, m)
             self.wait()
     
     def process(self):
