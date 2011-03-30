@@ -1,13 +1,14 @@
-import sys
 import argparse
+import datetime
+import httplib2
 import logging
 import logging.config
-
-import httplib2
+import sys
+import time
 
 from tracker import sqs_utils
 from tracker.daemons import SQSDaemon
-from tracker.pipeline import Pipeline, Message
+from tracker.pipeline import Pipeline, Article
 
 # Configure logger
 logging.config.fileConfig("logging.conf")
@@ -66,18 +67,27 @@ class ArticleDownloaderDaemon(SQSDaemon):
             try:
                 # Write the contents of the page, zipped, to the processing pipeline
                 pipeline = Pipeline()
-                pipeline.write(Message(response['content-location'], 
-                                       content, 
-                                       response['date']))
-                return true
+                fetch_date = response['date']
+                fetch_date = datetime.datetime.strptime(fetch_date,
+                    u'%a, %d %b %Y %H:%M:%S %Z')
+                fetch_date = time.mktime(fetch_date.timetuple())
+                article = Article(response['content-location'], 
+                                  content, 
+                                  fetch_date)
+                return article.add_to_queue()
             except Exception as e:
-                self.log.error("Couldn't add the article at %s to the pipeline: %s" % (url, e))
+                self.log.error("Couldn't add the article at <%s> to the pipeline: %s" % (url, e))
         else:
-            return false
+            return False
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process a queue",
-                                     parents=[SQSDaemon.parser])
+                                     parents=[SQSDaemon.parser], 
+                                     conflict_handler="resolve")
+    parser.add_argument("-max", action="store", dest="max_wait", 
+                        default=10000, type=int, help="The maximum number of milliseconds to wait between runs, defaults to 10000 (10 sec)")
+    parser.add_argument("-min", action="store", dest="min_wait", 
+                        default=2000, type=int, help="The minimum number of milliseconds to wait between runs, defaults to 2000 (2 sec)")
     args = parser.parse_args()
     # Lower the logging verbosity, since this is probably run as a daemon
     log.level = logging.INFO
