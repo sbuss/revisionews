@@ -2,3 +2,9 @@ This code is under the Apache License 2.0.  http://www.apache.org/licenses/LICEN
 
 revisionews v0.01
 29-11-2010
+
+RevisioNews will be a service that examines the dominant news sites for changes to articles that aren't declared.
+
+The rise of digital media presents us with a problem - changes to published articles can be done secretly and with no accountability. There is no watchdog monitoring articles for changes, and we shouldn't trust the media to announce their changes.
+
+RevisioNews aims to improve the integrity of journalists on the web by making unannounced changes known to the public.
